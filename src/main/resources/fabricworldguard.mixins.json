@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "net.fabricworldguard.mixin",
+	"compatibilityLevel": "JAVA_17",
+	"mixins": [
+		"EndermanGriefMixin",
+		"ExplosionMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
