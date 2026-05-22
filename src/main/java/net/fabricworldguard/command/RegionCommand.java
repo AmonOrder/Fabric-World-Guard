@@ -31,38 +31,38 @@ import java.util.stream.Collectors;
 public class RegionCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        var rg = CommandManager.literal("rg");
-        var region = CommandManager.literal("region").redirect(rg.build());
+
+        var root = CommandManager.literal("rg");
         var fwg = CommandManager.literal("fwg");
 
-        rg.then(CommandManager.literal("claim").then(CommandManager.argument("name", StringArgumentType.word()).executes(RegionCommand::executeClaim)));
-        rg.then(CommandManager.literal("delete").then(CommandManager.argument("name", StringArgumentType.word()).executes(RegionCommand::executeDelete)));
+        root.then(CommandManager.literal("claim").then(CommandManager.argument("name", StringArgumentType.word()).executes(RegionCommand::executeClaim)));
+        root.then(CommandManager.literal("delete").then(CommandManager.argument("name", StringArgumentType.word()).executes(RegionCommand::executeDelete)));
 
-        registerMemberCommand(rg, "addmember", true);
-        registerMemberCommand(rg, "addowner", false);
-        registerRemoveCommand(rg, "removemember", true);
-        registerRemoveCommand(rg, "removeowner", false);
+        registerMemberCommand(root, "addmember", true);
+        registerMemberCommand(root, "addowner", false);
+        registerRemoveCommand(root, "removemember", true);
+        registerRemoveCommand(root, "removeowner", false);
 
-        rg.then(CommandManager.literal("flag")
+        root.then(CommandManager.literal("flag")
                 .then(CommandManager.argument("name", StringArgumentType.word())
                         .then(CommandManager.argument("flag", StringArgumentType.word())
                                 .suggests(FlagSuggestions.PROVIDER) // ВОТ ТУТ МЫ ИСПОЛЬЗУЕМ КЛАСС
                                 .then(CommandManager.argument("value", BoolArgumentType.bool())
                                         .executes(RegionCommand::executeFlag)))));
 
-        rg.then(CommandManager.literal("info")
+        root.then(CommandManager.literal("info")
                 .executes(RegionCommand::executeInfo)
                 .then(CommandManager.argument("name", StringArgumentType.word())
                         .requires(s -> s.hasPermissionLevel(3))
                         .executes(ctx -> executeInfoWithName(ctx, StringArgumentType.getString(ctx, "name")))));
 
-        rg.then(CommandManager.literal("list").executes(ctx -> {
+        root.then(CommandManager.literal("list").executes(ctx -> {
             String names = RegionManager.getRegions().values().stream().map(Region::getName).collect(Collectors.joining(", "));
             ctx.getSource().sendFeedback(() -> Text.literal("Регионы: " + names), false);
             return 1;
         }));
 
-        rg.then(CommandManager.literal("lists").requires(s -> s.hasPermissionLevel(3)).executes(RegionCommand::executeLists));
+        root.then(CommandManager.literal("lists").requires(s -> s.hasPermissionLevel(3)).executes(RegionCommand::executeLists));
 
         // ВОТ ЭТА ЧАСТЬ БЫЛА ПРОПУЩЕНА:
         fwg.then(CommandManager.literal("reload").requires(s -> s.hasPermissionLevel(3)).executes(ctx -> {
@@ -73,8 +73,8 @@ public class RegionCommand {
             return 1;
         }));
 
-        dispatcher.register(rg);
-        dispatcher.register(region);
+        dispatcher.register(root);
+        dispatcher.register(CommandManager.literal("region").redirect(root.build()));
         dispatcher.register(fwg);
     }
 
