@@ -2,9 +2,7 @@ package net.fabricworldguard.mixin;
 
 import net.fabricworldguard.data.Region;
 import net.fabricworldguard.data.RegionManager;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import org.spongepowered.asm.mixin.Final;
@@ -24,17 +22,17 @@ public class ExplosionMixin {
 
     @Inject(method = "affectWorld(Z)V", at = @At("HEAD"))
     private void onExplosionAffect(boolean showParticles, CallbackInfo ci) {
-        Explosion explosion = (Explosion) (Object) this;
         if (this.world == null || this.world.isClient) return;
 
         String worldId = this.world.getRegistryKey().getValue().toString();
+        Explosion explosion = (Explosion) (Object) this;
 
-        // 1. Защита блоков
         List<BlockPos> blocks = explosion.getAffectedBlocks();
         if (blocks != null) {
             blocks.removeIf(pos -> {
                 Optional<Region> regionOpt = RegionManager.getRegionAt(worldId, pos);
-                return regionOpt.isPresent() && regionOpt.get().getFlags().getBoolean("explosions");
+                // Если регион есть и флаг explosions == false (выключен), удаляем блок из списка разрушений
+                return regionOpt.isPresent() && !regionOpt.get().getFlags().getBoolean("explosions");
             });
         }
     }

@@ -5,7 +5,10 @@
 	"mixins": [
 		"EndermanGriefMixin",
 		"ExplosionMixin",
-		"EntityProtectionMixin"
+		"EntityProtectionMixin",
+		"BlockProtectionMixin",
+		"PlayerAttackMixin",
+		"PotionProtectionMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

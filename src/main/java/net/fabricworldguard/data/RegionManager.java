@@ -82,4 +82,21 @@ public class RegionManager {
     public static Map<String, Region> getRegions() {
         return regions;
     }
+
+    // Полностью замени метод isActionDenied в конце RegionManager.java на этот:
+    public static boolean isActionDenied(String worldId, BlockPos pos, java.util.UUID playerUuid, String flagName) {
+        Optional<Region> regionOpt = getRegionAt(worldId, pos);
+        if (regionOpt.isEmpty()) {
+            return false; // Региона нет — действие разрешено
+        }
+
+        Region region = regionOpt.get();
+        // Если игрок — владелец или участник, ему можно абсолютно всё, флаги на него не влияют
+        if (region.isAllowed(playerUuid)) {
+            return false;
+        }
+
+        // Если флаг равен false (выключен), значит действие для чужака ЗАПРЕЩЕНО (возвращаем true)
+        return !region.getFlags().getBoolean(flagName);
+    }
 }

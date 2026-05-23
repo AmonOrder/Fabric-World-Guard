@@ -8,14 +8,14 @@ public class RegionFlags {
 
     public RegionFlags() {
         // Теперь все флаги по умолчанию true (защита включена)
-        flags.put("pvp", true);
-        flags.put("explosions", true);
-        flags.put("entry", true);
-        flags.put("enderman-grief", true);
+        flags.put("pvp", false);          // ПвП запрещено чужакам
+        flags.put("explosions", false);   // Взрывы не ломают блоки
+        flags.put("entry", true);         // Входить в регион можно
+        flags.put("enderman-grief", false);
         flags.put("mob-protection", true);
         flags.put("hanging-protection", true);
-        flags.put("use-doors", true);
-        flags.put("use-chests", true);
+        flags.put("use-doors", false);    // Двери закрыты для чужаков
+        flags.put("use-chests", false);
     }
 
     public void set(String flag, boolean val) {
@@ -25,8 +25,7 @@ public class RegionFlags {
 
     public boolean getBoolean(String flag) {
         // Если флаг был установлен, возвращаем его.
-        // Если нет — возвращаем true (или false, по умолчанию для защиты)
-        return flags.getOrDefault(flag.toLowerCase(), true);
+        return flags.getOrDefault(flag.toLowerCase(), false);
     }
 }
 

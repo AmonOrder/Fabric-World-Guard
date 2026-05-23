@@ -46,7 +46,7 @@ public class RegionCommand {
         root.then(CommandManager.literal("flag")
                 .then(CommandManager.argument("name", StringArgumentType.word())
                         .then(CommandManager.argument("flag", StringArgumentType.word())
-                                .suggests(FlagSuggestions.PROVIDER) // ВОТ ТУТ МЫ ИСПОЛЬЗУЕМ КЛАСС
+                                .suggests(FlagSuggestions.PROVIDER)
                                 .then(CommandManager.argument("value", BoolArgumentType.bool())
                                         .executes(RegionCommand::executeFlag)))));
 
@@ -64,11 +64,10 @@ public class RegionCommand {
 
         root.then(CommandManager.literal("lists").requires(s -> s.hasPermissionLevel(3)).executes(RegionCommand::executeLists));
 
-        // ВОТ ЭТА ЧАСТЬ БЫЛА ПРОПУЩЕНА:
         fwg.then(CommandManager.literal("reload").requires(s -> s.hasPermissionLevel(3)).executes(ctx -> {
             RegionManager.load();
             ModConfig.load();
-            FlagConfig.load(); // Раскомментируй эту строку, когда добавишь класс FlagConfig
+            FlagConfig.load();
             ctx.getSource().sendFeedback(() -> Text.literal("§aКонфиг и данные перезагружены!"), false);
             return 1;
         }));
@@ -87,15 +86,22 @@ public class RegionCommand {
         boolean value = BoolArgumentType.getBool(ctx, "value");
 
         Region reg = RegionManager.getRegions().get(name);
-        if (reg == null) { ctx.getSource().sendError(Text.literal("§cРегион не найден!")); return 0; }
+        if (reg == null) {
+            ctx.getSource().sendError(Text.literal("§cРегион не найден!"));
+            return 0;
+        }
 
         if (!reg.getOwner().equals(p.getUuid()) && !p.hasPermissionLevel(3)) {
-            ctx.getSource().sendError(Text.literal("§cНет прав!")); return 0;
+            ctx.getSource().sendError(Text.literal("§cНет прав!"));
+            return 0;
         }
 
         reg.getFlags().set(flag, value);
         RegionManager.save();
-        p.sendMessage(Text.literal("§aФлаг " + flag + " установлен в " + value), false);
+
+        // Новая синхронизированная логика отображения статуса флага
+        String status = value ? "§aРАЗРЕШЕНО" : "§cЗАПРЕЩЕНО";
+        ctx.getSource().sendFeedback(() -> Text.literal("§a[WG] Флаг §e" + flag + "§a в регионе §e" + reg.getName() + "§a теперь " + status), false);
         return 1;
     }
 
@@ -107,7 +113,6 @@ public class RegionCommand {
         BlockBox box = WorldEditHook.getSelection(p);
         if (box == null) { p.sendMessage(Text.literal("§cВыделите область WorldEdit!"), true); return 0; }
 
-        // Проверяем, нет ли пересечений
         if (RegionManager.isColliding(box, p.getUuid())) {
             p.sendMessage(Text.literal("§cЭта область пересекается с другим регионом!"), true);
             return 0;
@@ -217,8 +222,14 @@ public class RegionCommand {
     private static int executeInfo(CommandContext<ServerCommandSource> ctx) {
         ServerPlayerEntity p = ctx.getSource().getPlayer();
         if (p == null) return 0;
-        Optional<Region> reg = RegionManager.getRegionAt(p.getWorld().getRegistryKey().getValue().toString(), p.getBlockPos());
-        reg.ifPresent(region -> sendRegionInfo(ctx.getSource(), region));
+        String worldId = p.getWorld().getRegistryKey().getValue().toString();
+        Optional<Region> reg = RegionManager.getRegionAt(worldId, p.getBlockPos());
+
+        if (reg.isPresent()) {
+            sendRegionInfo(ctx.getSource(), reg.get());
+        } else {
+            ctx.getSource().sendFeedback(() -> Text.literal("§eСвободная территория"), false);
+        }
         return 1;
     }
 
